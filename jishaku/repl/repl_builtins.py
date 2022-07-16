@@ -11,10 +11,30 @@ Builtin functions and variables within Jishaku REPL contexts.
 
 """
 
+import typing
 import aiohttp
+
 import discord
 from redbot.core import commands
 
+
+async def request(*args: typing.Any, **kwargs: typing.Any) -> typing.Union[bytes, dict]:
+    """
+    Performs a HTTP request against a URL, returning the response payload as bytes.
+    
+    The arguments to pass are the same as :func:`aiohttp.ClientSession.get`,
+    with an additional ``json`` bool which indicates whether to return the result as JSON (defaults to ``True``).
+    """
+    json = kwargs.pop('json', True)
+    
+    async with aiohttp.ClientSession() as ses:
+        async with ses.request(*args, **kwargs) as res:
+            res.raise_for_status()
+            
+            if json:
+                return await res.json()
+            
+            return await res.read()
 
 async def http_get_bytes(*args, **kwargs) -> bytes:
     """
@@ -80,6 +100,7 @@ def get_var_dict_from_ctx(ctx: commands.Context, prefix: str = '_'):
     """
 
     raw_var_dict = {
+        'discord': discord,
         'author': ctx.author,
         'bot': ctx.bot,
         'channel': ctx.channel,
@@ -87,10 +108,12 @@ def get_var_dict_from_ctx(ctx: commands.Context, prefix: str = '_'):
         'find': discord.utils.find,
         'get': discord.utils.get,
         'guild': ctx.guild,
+        'me': ctx.me,
         'http_get_bytes': http_get_bytes,
         'http_get_json': http_get_json,
         'http_post_bytes': http_post_bytes,
         'http_post_json': http_post_json,
+        'request': request,
         'message': ctx.message,
         'msg': ctx.message
     }
