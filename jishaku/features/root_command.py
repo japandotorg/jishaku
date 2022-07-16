@@ -82,9 +82,9 @@ class RootCommand(Feature):
             dpy_version = f"unknown `{discord.__version__}`"
 
         summary = [
-            f"Jishaku v{package_version('jishaku')} (ported for Red) ",
-            f"<a:mel_whitedot:930948764674449498> {dpy_version}"
-            f"<a:mel_whitedot:930948764674449498> Python {'.'.join(map(str, sys.version_info[:3]))} on `{sys.platform}` platform",
+            f"Jishaku v{package_version('jishaku')} (ported for Red).",
+            f"<a:mel_whitedot:930948764674449498> {dpy_version}."
+            f"<a:mel_whitedot:930948764674449498> Python {'.'.join(map(str, sys.version_info[:3]))} on `{sys.platform}` platform.",
             f"<a:mel_whitedot:930948764674449498> Module was loaded <t:{self.load_time.timestamp():.0f}:R>.",
             f"<a:mel_whitedot:930948764674449498> Cog was loaded <t:{self.start_time.timestamp():.0f}:R>.",
             ""
@@ -98,7 +98,7 @@ class RootCommand(Feature):
                 with proc.oneshot():
                     try:
                         mem = proc.memory_full_info()
-                        summary.append(f"This process is using {natural_size(mem.rss)} physical memory\n"
+                        summary.append(f"This process is using {natural_size(mem.rss)} physical memory.\n"
                                        f"<a:mel_whitedot:930948764674449498> {natural_size(mem.vms)} virtual memory, "
                                        f"{natural_size(mem.uss)} of which unique to this process.")
                     except psutil.AccessDenied:
@@ -121,24 +121,24 @@ class RootCommand(Feature):
                 )
                 summary.append("")  # blank line
 
-        cache_summary = f"{len(self.bot.guilds)} guild(s) and {len(self.bot.users)} user(s)"
+        cache_summary = f"{len(self.bot.guilds)} guild(s) and {len(self.bot.users)} user(s)."
 
         # Show shard settings to summary
         if isinstance(self.bot, discord.AutoShardedClient):
             if len(self.bot.shards) > 20:
                 summary.append(
-                    f"This bot is automatically sharded ({len(self.bot.shards)} shards of {self.bot.shard_count})\n"
+                    f"This bot is automatically sharded ({len(self.bot.shards)} shards of {self.bot.shard_count}).\n"
                     f"<a:mel_whitedot:930948764674449498> It can see {cache_summary}."
                 )
             else:
                 shard_ids = ', '.join(str(i) for i in self.bot.shards.keys())
                 summary.append(
-                    f"This bot is automatically sharded (Shards {shard_ids} of {self.bot.shard_count})\n"
+                    f"This bot is automatically sharded (Shards {shard_ids} of {self.bot.shard_count}).\n"
                     f"<a:mel_whitedot:930948764674449498> It can see {cache_summary}."
                 )
         elif self.bot.shard_count:
             summary.append(
-                f"This bot is manually sharded (Shard {self.bot.shard_id} of {self.bot.shard_count})"
+                f"This bot is manually sharded (Shard {self.bot.shard_id} of {self.bot.shard_count})."
                 f"<a:mel_whitedot:930948764674449498> It can see {cache_summary}."
             )
         else:
@@ -146,18 +146,18 @@ class RootCommand(Feature):
 
         # pylint: disable=protected-access
         if self.bot._connection.max_messages:
-            message_cache = f"<a:mel_whitedot:930948764674449498> Message cache capped at {self.bot._connection.max_messages}"
+            message_cache = f"<a:mel_whitedot:930948764674449498> Message cache capped at {self.bot._connection.max_messages}."
         else:
-            message_cache = "<a:mel_whitedot:930948764674449498> Message cache is disabled"
+            message_cache = "<a:mel_whitedot:930948764674449498> Message cache is disabled."
 
         if discord.version_info >= (1, 5, 0):
             
-            presence_intent = f"Presence intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.presences else '<:melon_off:945199310100906004> disabled'}"
-            members_intent = f"Members intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.members else '<:melon_off:945199310100906004> disabled'}"
+            presence_intent = f"Presence intent is {'<:melon_on:945199207495663636> enabled.' if self.bot.intents.presences else '<:melon_off:945199310100906004> disabled.'}"
+            members_intent = f"Members intent is {'<:melon_on:945199207495663636> enabled.' if self.bot.intents.members else '<:melon_off:945199310100906004> disabled.'}"
 
             summary.append(f"{message_cache}\n<a:mel_whitedot:930948764674449498> {presence_intent}\n<a:mel_whitedot:930948764674449498> {members_intent}")
         else:
-            guild_subscriptions = f"guild subscriptions are {'<:melon_on:945199207495663636> enabled' if self.bot._connection.guild_subscriptions else 'disabled'}"
+            guild_subscriptions = f"guild subscriptions are {'<:melon_on:945199207495663636> enabled.' if self.bot._connection.guild_subscriptions else '<:melon_off:945199310100906004> disabled.'}"
 
             summary.append(f"{message_cache}\n<a:mel_whitedot:930948764674449498> {guild_subscriptions}.")
 
