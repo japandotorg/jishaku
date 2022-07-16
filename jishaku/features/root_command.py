@@ -147,7 +147,7 @@ class RootCommand(Feature):
         
         embed = discord.Embed(description=summary, color=0x2f3136)
 
-        await ctx.send(embed=embed)
+        await ctx.send(embed="\n".join(summary))
 
     # pylint: disable=no-member
     @Feature.Command(parent="jsk", name="hide")
