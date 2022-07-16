@@ -83,7 +83,7 @@ class RootCommand(Feature):
 
         summary = [
             f"Jishaku v{package_version('jishaku')} (ported for Red).",
-            f"<a:mel_whitedot:930948764674449498> {dpy_version}."
+            f"<a:mel_whitedot:930948764674449498> {dpy_version}.\n"
             f"<a:mel_whitedot:930948764674449498> Python {'.'.join(map(str, sys.version_info[:3]))} on `{sys.platform}` platform.",
             f"<a:mel_whitedot:930948764674449498> Module was loaded <t:{self.load_time.timestamp():.0f}:R>.",
             f"<a:mel_whitedot:930948764674449498> Cog was loaded <t:{self.start_time.timestamp():.0f}:R>.",
