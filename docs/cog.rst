@@ -35,7 +35,7 @@ Here is an example of a simple custom cog using this setup:
 
 .. code:: python3
 
-    from discord.ext import commands
+    from redbot.core import commands
 
     from jishaku.features.python import PythonFeature
     from jishaku.features.root_command import RootCommand
@@ -55,7 +55,7 @@ Thus, you can make a cog without any optional features like so:
 
 .. code:: python3
 
-    from discord.ext import commands
+    from redbot.core import commands
 
     from jishaku.cog import STANDARD_FEATURES
 
@@ -72,7 +72,7 @@ To use these features as well, simply add them to your cog:
 
 .. code:: python3
 
-    from discord.ext import commands
+    from redbot.core import commands
 
     from jishaku.cog import STANDARD_FEATURES, OPTIONAL_FEATURES
 
@@ -203,9 +203,9 @@ Yielded results are treated the same as if they were returned.
 When using the ``jsk py`` command, there are a set of contextual variables you can use to interact with Discord:
 
 +----------------+-----------------------------------------------------------+
-| ``_bot``       |  The :class:`discord.ext.commands.Bot` instance.          |
+| ``_bot``       |  The :class:`redbot.core.commands.Bot` instance.          |
 +----------------+-----------------------------------------------------------+
-| ``_ctx``       |  The invoking :class:`discord.ext.commands.Context`.      |
+| ``_ctx``       |  The invoking :class:`redbot.core.commands.Context`.      |
 +----------------+-----------------------------------------------------------+
 | ``_message``   |  An alias for ``_ctx.message``.                           |
 +----------------+                                                           |

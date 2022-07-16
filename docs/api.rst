@@ -67,7 +67,7 @@ You can use them like this:
 
 .. code:: python3
 
-    from discord.ext import commands
+    from redbot.core import commands
 
     from jishaku.help_command import MinimalPaginatorHelp
 

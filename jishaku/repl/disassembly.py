@@ -22,7 +22,7 @@ CORO_CODE = f"""
 import asyncio
 
 import discord
-from discord.ext import commands
+from redbot.core import commands
 from importlib import import_module as {import_expression.constants.IMPORTER}
 
 import jishaku

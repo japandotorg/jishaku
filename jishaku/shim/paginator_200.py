@@ -15,7 +15,7 @@ import asyncio
 
 import discord
 from discord import ui
-from discord.ext import commands
+from redbot.core import commands
 
 from jishaku.shim.paginator_base import EMOJI_DEFAULT
 
@@ -30,7 +30,7 @@ class PaginatorInterface(ui.View):  # pylint: disable=too-many-instance-attribut
 
     .. code:: python3
 
-        from discord.ext import commands
+        from redbot.core import commands
 
         from jishaku.paginators import PaginatorInterface
 

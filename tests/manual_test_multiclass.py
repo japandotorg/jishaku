@@ -23,7 +23,7 @@ import sys
 import typing
 
 import click
-from discord.ext import commands
+from redbot.core import commands
 
 LOADABLES = (
     ('j!1 ', 'tests.subclassed_module_1'),

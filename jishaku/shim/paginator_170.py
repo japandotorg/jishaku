@@ -14,7 +14,7 @@ Paginator-related tools and interfaces for Jishaku.
 import asyncio
 
 import discord
-from discord.ext import commands
+from redbot.core import commands
 
 from jishaku.shim.paginator_base import EMOJI_DEFAULT
 
@@ -29,7 +29,7 @@ class PaginatorInterface:  # pylint: disable=too-many-instance-attributes
 
     .. code:: python3
 
-        from discord.ext import commands
+        from redbot.core import commands
 
         from jishaku.paginators import PaginatorInterface
 

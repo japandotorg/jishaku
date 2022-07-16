@@ -16,7 +16,7 @@ from io import BytesIO
 import discord
 import pytest
 import utils
-from discord.ext import commands
+from redbot.core import commands
 
 from jishaku.paginators import FilePaginator, PaginatorEmbedInterface, PaginatorInterface, WrappedPaginator
 
