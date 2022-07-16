@@ -152,8 +152,8 @@ class RootCommand(Feature):
 
         if discord.version_info >= (1, 5, 0):
             
-            presence_intent = f"presence intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.presences else '<:melon_off:945199310100906004> disabled'}"
-            members_intent = f"members intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.members else '<:melon_off:945199310100906004> disabled'}"
+            presence_intent = f"Presence intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.presences else '<:melon_off:945199310100906004> disabled'}"
+            members_intent = f"Members intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.members else '<:melon_off:945199310100906004> disabled'}"
 
             summary.append(f"{message_cache}\n<a:mel_whitedot:930948764674449498> {presence_intent}\n<a:mel_whitedot:930948764674449498> {members_intent}")
         else:
@@ -171,7 +171,7 @@ class RootCommand(Feature):
             color=0x2f3136,
             timestamp=ctx.message.created_at,
         )
-        embed.set_footer(text="Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
+        embed.set_footer(text=f"Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
         
         await ctx.send(embed=embed)
 
