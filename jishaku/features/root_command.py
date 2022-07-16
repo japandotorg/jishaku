@@ -151,31 +151,15 @@ class RootCommand(Feature):
             message_cache = "<a:mel_whitedot:930948764674449498> Message cache is disabled"
 
         if discord.version_info >= (1, 5, 0):
-            remarks = {
-                True: '<:melon_on:945199207495663636> enabled',
-                False: '<:melon_off:945199310100906004> disabled',
-                None: '<:melon_exclam:997904751427596328> unknown'
-            }
-            intents = {
-                'presences': 'Presence',
-                'members': 'Guild members',
-                'message_content': 'Message content'
-            }
             
-            *group, last = (
-                f"<a:mel_whitedot:930948764674449498> {intents[intent]} is {remarks.get(getattr(self.bot.intents, intent, None))}\n"
-                for intent in
-                ('presence', 'members', 'message_content')
-            )
-            
-            # presence_intent = f"presence intent is {'enabled' if self.bot.intents.presences else 'disabled'}"
-            # members_intent = f"members intent is {'enabled' if self.bot.intents.members else 'disabled'}"
+            presence_intent = f"presence intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.presences else '<:melon_off:945199310100906004> disabled'}"
+            members_intent = f"members intent is {'<:melon_on:945199207495663636> enabled' if self.bot.intents.members else '<:melon_off:945199310100906004> disabled'}"
 
-            summary.append(f"{message_cache}\n{''.join(group)}{last}\n")
+            summary.append(f"{message_cache}\n<a:mel_whitedot:930948764674449498> {presence_intent}\n<a:mel_whitedot:930948764674449498> {members_intent}")
         else:
-            guild_subscriptions = f"guild subscriptions are {'enabled' if self.bot._connection.guild_subscriptions else 'disabled'}"
+            guild_subscriptions = f"guild subscriptions are {'<:melon_on:945199207495663636> enabled' if self.bot._connection.guild_subscriptions else 'disabled'}"
 
-            summary.append(f"{message_cache} and {guild_subscriptions}.")
+            summary.append(f"{message_cache}\n<a:mel_whitedot:930948764674449498> {guild_subscriptions}.")
 
         # pylint: enable=protected-access
 
