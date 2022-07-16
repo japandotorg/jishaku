@@ -11,7 +11,7 @@ The jishaku root command.
 
 """
 
-from importlib.metadata import packages_distributions
+# from importlib.metadata import packages_distributions
 import math
 import sys
 import typing
