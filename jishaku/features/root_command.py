@@ -171,7 +171,7 @@ class RootCommand(Feature):
             color=0x2f3136,
             timestamp=ctx.message.created_at,
         )
-        embed.set_footer(name="Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
+        embed.set_footer(text="Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
         
         await ctx.send(embed=embed)
 
