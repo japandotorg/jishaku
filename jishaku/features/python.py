@@ -12,9 +12,14 @@ The jishaku Python evaluation/execution commands.
 """
 
 import io
+import sys
+import typing
+import inspect
+import asyncio
 
 import discord
 from redbot.core import commands
+from redbot.core.utils.chat_formatting import box
 
 from jishaku.codeblocks import codeblock_converter
 from jishaku.exception_handling import ReplResponseReactor
@@ -22,7 +27,7 @@ from jishaku.features.baseclass import Feature
 from jishaku.flags import Flags
 from jishaku.functools import AsyncSender
 from jishaku.paginators import PaginatorInterface, WrappedPaginator, use_file_check
-from jishaku.repl import AsyncCodeExecutor, Scope, all_inspections, disassemble, get_var_dict_from_ctx
+from jishaku.repl import AsyncCodeExecutor, Scope, all_inspections, create_tree, disassemble, get_var_dict_from_ctx
 
 
 class PythonFeature(Feature):
@@ -30,11 +35,12 @@ class PythonFeature(Feature):
     Feature containing the Python-related commands
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self._scope = Scope()
         self.retain = Flags.RETAIN
-        self.last_result = None
+        self.last_result: typing.Any = None
+        self.repl_sessions = set()
 
     @property
     def scope(self):
@@ -126,6 +132,32 @@ class PythonFeature(Feature):
 
         interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
         return await interface.send_to(ctx)
+    
+    def jsk_python_get_convertables(self, ctx: commands.Context) -> typing.Tuple[typing.Dict[str, typing.Any], typing.Dict[str, str]]:
+        """
+        Gets the arg dict and convertables for this scope.
+        
+        The arg dict contains the 'locals' to be propagated into the REPL scope.
+        The convertables are string->string conversions to be attempted if the code fails to parse.
+        """
+        
+        arg_dict = get_var_dict_from_ctx(ctx, Flags.SCOPE_PREFIX)
+        arg_dict["_"] = self.last_result
+        convertables: typing.Dict[str, str] = {}
+        
+        for index, user in enumerate(ctx.message.mentions):
+            arg_dict[f"__user_mention_{index}"] = user
+            convertables[user.mention] = f"__user_mention_{index}"
+
+        for index, channel in enumerate(ctx.message.channel_mentions):
+            arg_dict[f"__channel_mention_{index}"] = channel
+            convertables[channel.mention] = f"__channel_mention_{index}"
+
+        for index, role in enumerate(ctx.message.role_mentions):
+            arg_dict[f"__role_mention_{index}"] = role
+            convertables[role.mention] = f"__role_mention_{index}"
+
+        return arg_dict, convertables
 
     @Feature.Command(parent="jsk", name="py", aliases=["python", "eval"])
     async def jsk_python(self, ctx: commands.Context, *, argument: codeblock_converter):
@@ -221,3 +253,85 @@ class PythonFeature(Feature):
 
                 interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
                 await interface.send_to(ctx)
+                
+    @Feature.Command(parent="jsk", name="ast")
+    async def jsk_ast(self, ctx: commands.Context, *, argument: codeblock_converter): # type: ignore
+        """
+        Disassemble Python code into AST.
+        """
+        
+        if typing.TYPE_CHECKING:
+            argument: Codeblock = argument # type: ignore
+            
+        async with ReplResponseReactor(ctx.bot, ctx.message):
+            text = create_tree(argument.content, use_ansi=Flags.use_ansi(ctx))
+            
+            await ctx.send(file=discord.File(
+                filename="ast.ansi",
+                fp=io.BytesIO(text.encode("utf-8"))
+            ))
+                
+    @Feature.Command(parent="jsk", name="repl")
+    async def jsk_repl(self, ctx: commands.Context):
+        """
+        Launches a Python interactive shell in the current channel.
+        Messages not starting with "$" will be ignored by default.
+        
+        The REPL session auto exits if left idle for 10 minutes.
+        
+        Inspired by [R.Danny's version](https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/admin.py)
+        """
+        
+        arg_dict, convertables = self.jsk_python_get_convertables(ctx)
+        scope = self.scope
+        
+        if ctx.channel.id in self.repl_sessions:
+            await ctx.send(
+                "Already running an interactive shell in this channel. Use `exit()` or `quit()` or exit."
+            )
+            return
+        
+        banner = "Python {} on {}\n".format(sys.version.split("\n")[0], sys.platform)
+        
+        self.repl_sessions.add(ctx.channel.id)
+        await ctx.send(box(banner, "py"))
+        
+        def check(m):
+            return m.author.id == ctx.author.id and \
+                   m.channel.id == ctx.channel.id and \
+                   (True if Flags.NO_REPL_PREFX else m.content.startswith("$"))
+                   
+        while True:
+            try:
+                response = await self.bot.wait_for("message", check=check, timeout=10.0 * 60.0)
+            except asyncio.TimeoutError:
+                await ctx.send("Exiting...")
+                self.repl_sessions.remove(ctx.channel.id)
+                break
+            
+            argument = codeblock_converter(response.content)
+            
+            if argument.content in ("ext()", "quit()"):
+                await ctx.send("Exiting...")
+                self.repl_sessions.remove(ctx.channel.id)
+                return
+            elif argument.content in ("exit", "quit"):
+                await ctx.send(f"Use `{argument.content}()` to exit.")
+                continue
+            
+            arg_dict["message"] = arg_dict["msg"] = response
+            
+            try:
+                async with ReplResponseReactor(ctx.bot, response):
+                    with self.submit(ctx):
+                        executor = AsyncCodeExecutor(argument.content, scope, arg_dict=arg_dict, convertables=convertables)
+                        async for send, result in AsyncSender(executor):
+                            if result is None:
+                                continue
+                            
+                            self.last_result = result
+                            
+                            send(await self.jsk_python_result_handling(ctx, result))
+                            
+            finally:
+                scope.clear_intersection(arg_dict)
