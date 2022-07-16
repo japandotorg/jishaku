@@ -18,7 +18,6 @@ import typing
 
 import discord
 from redbot.core import commands # type: ignore
-from discord.utils import format_dt
 
 from jishaku.features.baseclass import Feature
 from jishaku.flags import Flags
@@ -30,7 +29,10 @@ try:
 except ImportError:
     psutil = None
     
-from importlib_metadata import distribution, packages_distributions # type: ignore
+try:
+    from importlib.metadata import distribution, packages_distributions
+except ImportError:
+    from importlib_metadata import distribution, packages_distributions  # type: ignore
 
 
 def natural_size(size_in_bytes: int):
@@ -83,8 +85,8 @@ class RootCommand(Feature):
             f"Jishaku v{package_version('jishaku')} (ported for Red) ",
             f"<a:mel_whitedot:930948764674449498> {dpy_version}"
             f"<a:mel_whitedot:930948764674449498> Python {'.'.join(map(str, sys.version_info[:3]))} on `{sys.platform}` platform",
-            f"<a:mel_whitedot:930948764674449498> Module was loaded {format_dt(self.load_time, 'R')}.",
-            f"<a:mel_whitedot:930948764674449498> Cog was loaded {format_dt(self.start_time, 'R')}",
+            f"<a:mel_whitedot:930948764674449498> Module was loaded <t:{self.load_time.timestamp():.0f}:R>.",
+            f"<a:mel_whitedot:930948764674449498> Cog was loaded <t:{self.start_time.timestamp():.0f}:R>.",
             ""
         ]
 
