@@ -30,10 +30,7 @@ try:
 except ImportError:
     psutil = None
     
-try:
-    from importlib.metadata import distribution, packages_distributions
-except ImportError:
-    from importlib_metadata import distribution, packages_distributions # type: ignore
+from importlib_metadata import distribution, packages_distributions # type: ignore
 
 
 def natural_size(size_in_bytes: int):
