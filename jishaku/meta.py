@@ -34,7 +34,7 @@ __copyright__ = 'Copyright 2021 Devon (Gorialis) R'
 __docformat__ = 'restructuredtext en'
 __license__ = 'MIT'
 __title__ = 'jishaku'
-__version__ = '.'.join(map(str, (version_info.major, version_info.minor, version_info.micro)))
+__version__ = '2.3.69.dev666420' # .join(map(str, (version_info.major, version_info.minor, version_info.micro)))
 
 # This ensures that when jishaku is reloaded, pkg_resources requeries it to provide correct version info
 pkg_resources.working_set.by_key.pop('jishaku', None)
