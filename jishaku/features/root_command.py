@@ -11,12 +11,14 @@ The jishaku root command.
 
 """
 
+from importlib.metadata import packages_distributions
 import math
 import sys
 import typing
 
 import discord
-from redbot.core import commands
+from redbot.core import commands # type: ignore
+from discord.utils import format_dt
 
 from jishaku.features.baseclass import Feature
 from jishaku.flags import Flags
@@ -27,6 +29,11 @@ try:
     import psutil
 except ImportError:
     psutil = None
+    
+try:
+    from importlib.metadata import distribution, packages_distributions
+except ImportError:
+    from importlib_metadata import distribution, packages_distributions # type: ignore
 
 
 def natural_size(size_in_bytes: int):
@@ -52,7 +59,7 @@ class RootCommand(Feature):
         super().__init__(*args, **kwargs)
         self.jsk.hidden = Flags.HIDE
 
-    @Feature.Command(name="jishaku", aliases=["jsk"],
+    @Feature.Command(name="jishaku", aliases=["jsk", "mmo", "fko"],
                      invoke_without_command=True, ignore_extra=False)
     async def jsk(self, ctx: commands.Context):  # pylint: disable=too-many-branches
         """
@@ -61,12 +68,26 @@ class RootCommand(Feature):
         This command on its own gives a status brief.
         All other functionality is within its subcommands.
         """
+        
+        distributions: typing.List[str] = [
+            dist for dist in packages_distributions()['discord'] # type: ignore
+            if any(
+                file.parts == ('discord', '__init__.py') # type: ignore
+                for file in distribution(dist).files
+            )
+        ]
+        
+        if distributions:
+            dpy_version = f"{distributions[0]} v{package_version(distributions[0])}"
+        else:
+            dpy_version = f"unknown `{discord.__version__}`"
 
         summary = [
-            f"Jishaku v{package_version('jishaku')}, discord.py `{package_version('discord.py')}`, "
-            f"`Python {sys.version}` on `{sys.platform}`".replace("\n", ""),
-            f"Module was loaded <t:{self.load_time.timestamp():.0f}:R>, "
-            f"cog was loaded <t:{self.start_time.timestamp():.0f}:R>.",
+            f"Jishaku v{package_version('jishaku')} (ported for Red) ",
+            f"<a:mel_whitedot:930948764674449498> {dpy_version}"
+            f"<a:mel_whitedot:930948764674449498> Python {'.'.join(map(str, sys.version_info[:3]))} on `{sys.platform}` platform",
+            f"<a:mel_whitedot:930948764674449498> Module was loaded {format_dt(self.load_time, 'R')}.",
+            f"<a:mel_whitedot:930948764674449498> Cog was loaded {format_dt(self.start_time, 'R')}",
             ""
         ]
 
@@ -78,8 +99,8 @@ class RootCommand(Feature):
                 with proc.oneshot():
                     try:
                         mem = proc.memory_full_info()
-                        summary.append(f"Using {natural_size(mem.rss)} physical memory and "
-                                       f"{natural_size(mem.vms)} virtual memory, "
+                        summary.append(f"This process is using {natural_size(mem.rss)} physical memory\n"
+                                       f"<a:mel_whitedot:930948764674449498> {natural_size(mem.vms)} virtual memory, "
                                        f"{natural_size(mem.uss)} of which unique to this process.")
                     except psutil.AccessDenied:
                         pass
@@ -89,7 +110,7 @@ class RootCommand(Feature):
                         pid = proc.pid
                         thread_count = proc.num_threads()
 
-                        summary.append(f"Running on PID {pid} (`{name}`) with {thread_count} thread(s).")
+                        summary.append(f"<a:mel_whitedot:930948764674449498> Running on PID {pid} (`{name}`) with {thread_count} thread(s).")
                     except psutil.AccessDenied:
                         pass
 
@@ -107,34 +128,51 @@ class RootCommand(Feature):
         if isinstance(self.bot, discord.AutoShardedClient):
             if len(self.bot.shards) > 20:
                 summary.append(
-                    f"This bot is automatically sharded ({len(self.bot.shards)} shards of {self.bot.shard_count})"
-                    f" and can see {cache_summary}."
+                    f"This bot is automatically sharded ({len(self.bot.shards)} shards of {self.bot.shard_count})\n"
+                    f"<a:mel_whitedot:930948764674449498> It can see {cache_summary}."
                 )
             else:
                 shard_ids = ', '.join(str(i) for i in self.bot.shards.keys())
                 summary.append(
-                    f"This bot is automatically sharded (Shards {shard_ids} of {self.bot.shard_count})"
-                    f" and can see {cache_summary}."
+                    f"This bot is automatically sharded (Shards {shard_ids} of {self.bot.shard_count})\n"
+                    f"<a:mel_whitedot:930948764674449498> It can see {cache_summary}."
                 )
         elif self.bot.shard_count:
             summary.append(
                 f"This bot is manually sharded (Shard {self.bot.shard_id} of {self.bot.shard_count})"
-                f" and can see {cache_summary}."
+                f"<a:mel_whitedot:930948764674449498> It can see {cache_summary}."
             )
         else:
-            summary.append(f"This bot is not sharded and can see {cache_summary}.")
+            summary.append(f"This bot is not sharded\n<a:mel_whitedot:930948764674449498> It can see {cache_summary}.")
 
         # pylint: disable=protected-access
         if self.bot._connection.max_messages:
-            message_cache = f"Message cache capped at {self.bot._connection.max_messages}"
+            message_cache = f"<a:mel_whitedot:930948764674449498> Message cache capped at {self.bot._connection.max_messages}"
         else:
-            message_cache = "Message cache is disabled"
+            message_cache = "<a:mel_whitedot:930948764674449498> Message cache is disabled"
 
         if discord.version_info >= (1, 5, 0):
-            presence_intent = f"presence intent is {'enabled' if self.bot.intents.presences else 'disabled'}"
-            members_intent = f"members intent is {'enabled' if self.bot.intents.members else 'disabled'}"
+            remarks = {
+                True: '<:melon_on:945199207495663636> enabled',
+                False: '<:melon_off:945199310100906004> disabled',
+                None: '<:melon_exclam:997904751427596328> unknown'
+            }
+            intents = {
+                'presences': 'Presence',
+                'members': 'Guild members',
+                'message_content': 'Message content'
+            }
+            
+            *group, last = (
+                f"<a:mel_whitedot:930948764674449498> {intents[intent]} is {remarks.get(getattr(self.bot.intents, intent, None))}\n"
+                for intent in
+                ('presence', 'members', 'message_content')
+            )
+            
+            # presence_intent = f"presence intent is {'enabled' if self.bot.intents.presences else 'disabled'}"
+            # members_intent = f"members intent is {'enabled' if self.bot.intents.members else 'disabled'}"
 
-            summary.append(f"{message_cache}, {presence_intent} and {members_intent}.")
+            summary.append(f"{message_cache}\n{''.join(group)}{last}\n")
         else:
             guild_subscriptions = f"guild subscriptions are {'enabled' if self.bot._connection.guild_subscriptions else 'disabled'}"
 
@@ -143,10 +181,15 @@ class RootCommand(Feature):
         # pylint: enable=protected-access
 
         # Show websocket latency in milliseconds
-        summary.append(f"Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
+        # summary.append(f"Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
         
-        embed = discord.Embed(description="\n".join(summary), color=0x2f3136)
-
+        embed = discord.Embed(
+            description="\n".join(summary), 
+            color=0x2f3136,
+            timestamp=ctx.message.created_at,
+        )
+        embed.set_footer(name="Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
+        
         await ctx.send(embed=embed)
 
     # pylint: disable=no-member
