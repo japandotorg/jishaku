@@ -127,7 +127,7 @@ class PythonFeature(Feature):
         interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
         return await interface.send_to(ctx)
 
-    @Feature.Command(parent="jsk", name="py", aliases=["python", "eval"])
+    @Feature.Command(parent="jsk", name="py", aliases=["python"])
     async def jsk_python(self, ctx: commands.Context, *, argument: codeblock_converter):
         """
         Direct evaluation of Python code.
