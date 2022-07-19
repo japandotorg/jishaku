@@ -16,13 +16,9 @@ import inspect
 import os
 import typing
 
-import discord
-from redbot.core import commands # type: ignore
-
 ENABLED_SYMBOLS = ("true", "t", "yes", "y", "on", "1")
 DISABLED_SYMBOLS = ("false", "f", "no", "n", "off", "0")
 
-FlagHandler = typing.Optional[typing.Callable[['FlagMeta'], typing.Any]]
 
 @dataclasses.dataclass
 class Flag:
@@ -32,11 +28,10 @@ class Flag:
 
     name: str
     flag_type: type
-    default: FlagHandler = None
-    handler: FlagHandler = None
+    default: typing.Callable = None
     override: typing.Any = None
 
-    def resolve_raw(self, flags):  # pylint: disable=too-many-return-statements
+    def resolve(self, flags):  # pylint: disable=too-many-return-statements
         """
         Resolve this flag. Only for internal use.
         """
@@ -65,19 +60,6 @@ class Flag:
             return self.default
 
         return self.flag_type()
-    
-    def resolve(self, flags: 'FlagMeta'):
-        """
-        Resolve this flag. Only for intenal use.
-        Applies the handler when there is one.
-        """
-        
-        value = self.resolve_raw(flags)
-        
-        if self.handler:
-            return self.handler(value) # type: ignore
-        
-        return value
 
 
 class FlagMeta(type):
@@ -86,35 +68,15 @@ class FlagMeta(type):
     This handles the Just-In-Time evaluation of flags, allowing them to be overridden during execution.
     """
 
-    def __new__(
-        cls, 
-        name: str, 
-        base: typing.Tuple[typing.Type[typing.Any]], 
-        attrs: typing.Dict[str, typing.Any]
-    ):
+    def __new__(cls, name, base, attrs):
         attrs['flag_map'] = {}
 
         for flag_name, flag_type in attrs['__annotations__'].items():
-            default: typing.Union[
-                FlagHandler,
-                typing.Tuple[
-                    FlagHandler, # default
-                    FlagHandler # handler
-                ],
-            ] = attrs.pop(flag_name, None)
-            handler: FlagHandler = None
-            
-            if isinstance(default, tuple):
-                default, handler = default
-                
-            attrs['flag_map'][flag_name] = Flag(flag_name, flag_type, default, handler)
-            # attrs['flag_map'][flag_name] = Flag(flag_name, flag_type, attrs.pop(flag_name, None))
+            attrs['flag_map'][flag_name] = Flag(flag_name, flag_type, attrs.pop(flag_name, None))
 
         return super(FlagMeta, cls).__new__(cls, name, base, attrs)
 
     def __getattr__(cls, name: str):
-        cls.flag_map: typing.Dict[str, Flag]
-        
         if hasattr(cls, 'flag_map') and name in cls.flag_map:
             return cls.flag_map[name].resolve(cls)
 
@@ -156,57 +118,10 @@ class Flags(metaclass=FlagMeta):  # pylint: disable=too-few-public-methods
     SCOPE_PREFIX: str = lambda flags: '' if flags.NO_UNDERSCORE else '_'
 
     # Flag to indicate whether to always use paginators over relying on Discord's file preview
-    FORCE_PAGINATOR: bool = True
-    
-    # Flag to indicate wheather to react with success/failure emojis.
-    NO_REACTION: bool
-    
-    # Flag to indicate whether to replace Message objects with a link to the message.
-    REPLACE_MESSAGES: bool = True
-    
+    FORCE_PAGINATOR: bool
+
     # Flag to indicate verbose error tracebacks should be sent to the invoking channel as opposed to via direct message.
-    # ALWAYS_DM_TRACEBACK takes precedence over this
-    NO_DM_TRACEBACK: bool = True
-    
-    # Flag to indicate all errors, even minor ones like SyntaxError, should be sent via direct message.
-    ALWAYS_DM_TRACEBACK: bool = True
-    
-    @classmethod
-    def traceback_destination(cls, message: discord.Message) -> typing.Optional[discord.abc.Messageable]:
-        """
-        Determine what 'default' location to send tracebacks to
-        When None, the caller should decide
-        """
-        
-        if cls.ALWAYS_DM_TRACEBACK:
-            return message.author
-        
-        if cls.NO_DM_TRACEBACK:
-            return message.channel
-        
-        # Otherwise let the caller decide
-        return None
+    NO_DM_TRACEBACK: bool
 
     # Flag to indicate usage of braille J in shutdown command
     USE_BRAILLE_J: bool
-    
-    # Flag to indicate whether ANSI support should always be enabled
-    # USE_ANSI_NEVER takes precedence over this
-    USE_ANSI_ALWAYS: bool
-    
-    # Flag to indicate whether ANSI support should always be disabled
-    USE_ANSI_NEVER: bool
-    
-    @classmethod
-    def use_ansi(cls, ctx: commands.Context) -> bool:
-        """
-        Determine whether to use ANSI support from flags and context
-        """
-        
-        if cls.USE_ANSI_NEVER:
-            return False
-        
-        if cls.USE_ANSI_ALWAYS:
-            return True
-        
-        return not ctx.author.is_on_mobile() if isinstance(ctx.author, discord.Member) and ctx.bot.intents.presences else True
