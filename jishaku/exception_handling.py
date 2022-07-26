@@ -105,7 +105,7 @@ class ReactionProcedureTimer:  # pylint: disable=too-few-public-methods
 
         # no exception, check mark
         if not exc_val:
-            await attempt_add_reaction(self.message, "\N{WHITE HEAVY CHECK MARK}")
+            await attempt_add_reaction(self.message, "<a:ml_tick:951106264849604639>")
             return
 
         self.raised = True
@@ -115,10 +115,10 @@ class ReactionProcedureTimer:  # pylint: disable=too-few-public-methods
             await attempt_add_reaction(self.message, "\N{ALARM CLOCK}")
         elif isinstance(exc_val, SyntaxError):
             # syntax error, single exclamation mark
-            await attempt_add_reaction(self.message, "\N{HEAVY EXCLAMATION MARK SYMBOL}")
+            await attempt_add_reaction(self.message, "<:melon_exclam:997904751427596328>")
         else:
             # other error, double exclamation mark
-            await attempt_add_reaction(self.message, "\N{DOUBLE EXCLAMATION MARK}")
+            await attempt_add_reaction(self.message, "<a:ml_exclamation:954016181600272395>")
 
 
 class ReplResponseReactor(ReactionProcedureTimer):  # pylint: disable=too-few-public-methods
